@@ -2,6 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Admin from "../models/Admin.js";
+import Order from "../models/Order.js";
 
 const router = express.Router();
 
@@ -136,6 +137,42 @@ router.get("/profile", async (req, res) => {
     res.json({ user });
   } catch (error) {
     res.status(401).json({ message: "Invalid token" });
+  }
+});
+
+// Create Order
+router.post("/orders", async (req, res) => {
+  try {
+    const orderData = req.body;
+    
+    // Generate order number
+    const orderNumber = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
+    
+    const order = new Order({
+      orderNumber,
+      customerInfo: {
+        name: orderData.orderDetails?.name,
+        email: orderData.customerInfo?.email,
+        phone: orderData.customerInfo?.phone
+      },
+      orderType: orderData.orderType,
+      items: orderData.items || [],
+      cheeseBoard: orderData.cheeseBoard,
+      totalPrice: orderData.totalPrice,
+      notes: orderData.orderDetails?.specialInstructions,
+      status: 'pending'
+    });
+    
+    await order.save();
+    
+    res.status(201).json({
+      message: "Order placed successfully",
+      orderNumber: order.orderNumber,
+      orderId: order._id
+    });
+  } catch (error) {
+    console.error('Order creation error:', error);
+    res.status(500).json({ message: "Error placing order", error: error.message });
   }
 });
 

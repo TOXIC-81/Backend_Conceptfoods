@@ -4,6 +4,8 @@ import Admin from "../models/Admin.js";
 import User from "../models/User.js";
 import MenuItem from "../models/MenuItem.js";
 import Content from "../models/Content.js";
+import CheeseBoard from "../models/CheeseBoard.js";
+import Order from "../models/Order.js";
 
 const router = express.Router();
 
@@ -110,6 +112,7 @@ router.post("/menu-items", adminAuth, async (req, res) => {
     await item.save();
     res.status(201).json({ message: "Menu item created successfully", item });
   } catch (error) {
+    console.error("Error creating menu item:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -129,6 +132,7 @@ router.put("/menu-items/:id", adminAuth, async (req, res) => {
     
     res.json({ message: "Menu item updated successfully", item });
   } catch (error) {
+    console.error("Error updating menu item:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -201,7 +205,6 @@ router.get("/profile", adminAuth, async (req, res) => {
 // Get cheese boards
 router.get('/cheese-boards', async (req, res) => {
   try {
-    const CheeseBoard = (await import('../models/CheeseBoard.js')).default;
     const boards = await CheeseBoard.find();
     res.json({ boards });
   } catch (error) {
@@ -213,7 +216,6 @@ router.get('/cheese-boards', async (req, res) => {
 // Get specific cheese board by type
 router.get('/cheese-boards/:type', async (req, res) => {
   try {
-    const CheeseBoard = (await import('../models/CheeseBoard.js')).default;
     const board = await CheeseBoard.findOne({ type: req.params.type });
     if (!board) {
       return res.status(404).json({ error: 'Cheese board type not found' });
@@ -228,7 +230,6 @@ router.get('/cheese-boards/:type', async (req, res) => {
 // Update cheese board
 router.put('/cheese-boards/:id', adminAuth, async (req, res) => {
   try {
-    const CheeseBoard = (await import('../models/CheeseBoard.js')).default;
     const board = await CheeseBoard.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!board) {
       return res.status(404).json({ error: 'Cheese board not found' });
@@ -243,7 +244,6 @@ router.put('/cheese-boards/:id', adminAuth, async (req, res) => {
 // Create order
 router.post('/orders', async (req, res) => {
   try {
-    const Order = (await import('../models/Order.js')).default;
     const orderNumber = 'ORD' + Date.now();
     const order = new Order({ ...req.body, orderNumber });
     await order.save();
@@ -257,7 +257,6 @@ router.post('/orders', async (req, res) => {
 // Get all orders (admin only)
 router.get('/orders', adminAuth, async (req, res) => {
   try {
-    const Order = (await import('../models/Order.js')).default;
     const orders = await Order.find().sort({ createdAt: -1 });
     res.json({ orders });
   } catch (error) {
@@ -269,7 +268,6 @@ router.get('/orders', adminAuth, async (req, res) => {
 // Update order status
 router.put('/orders/:id', adminAuth, async (req, res) => {
   try {
-    const Order = (await import('../models/Order.js')).default;
     const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });

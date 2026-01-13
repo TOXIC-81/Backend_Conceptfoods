@@ -1,52 +1,53 @@
 import mongoose from 'mongoose';
 
 const cheeseBoardSchema = new mongoose.Schema({
-  type: {
-    type: String,
-    required: true,
-    enum: ['classic', 'indian', 'silver', 'gold']
-  },
-  name: {
-    type: String,
-    required: true
-  },
-  weight: {
-    type: String,
-    required: true
-  },
-  serves: {
-    type: String,
-    required: true
-  },
-  price: {
-    type: Number,
-    required: true
-  },
-  selections: {
-    cheese: {
-      choose: Number,
-      options: [String]
+    name: {
+        type: String,
+        required: true
     },
-    breads: {
-      choose: Number,
-      options: [String]
+    type: {
+        type: String,
+        required: true,
+        unique: true
     },
-    dips: {
-      choose: Number,
-      options: [String]
+    price: {
+        type: Number,
+        required: true
     },
-    fruits: {
-      fresh: Number,
-      dry: Number,
-      options: [String]
+    description: String,
+    image: String,
+    limits: {
+        cheese: Number,
+        bread: Number,
+        dip: Number,
+        freshFruit: Number,
+        dryFruit: Number,
+        addon: Number
     },
-    addOns: {
-      choose: Number,
-      options: [String]
+    categories: [{
+        name: {
+            type: String,
+            required: true
+        },
+        subtitle: String,
+        maxSelections: {
+            type: Number,
+            default: 1
+        },
+        items: [{
+            name: {
+                type: String,
+                required: true
+            },
+            description: String
+        }]
+    }],
+    isActive: {
+        type: Boolean,
+        default: true
     }
-  }
 }, {
-  timestamps: true
+    timestamps: true
 });
 
 export default mongoose.model('CheeseBoard', cheeseBoardSchema);
