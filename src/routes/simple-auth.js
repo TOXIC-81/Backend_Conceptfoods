@@ -140,6 +140,36 @@ router.get("/profile", async (req, res) => {
   }
 });
 
+// Get user orders
+router.get("/user-orders", async (req, res) => {
+  try {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Find orders by user email or phone
+    const orders = await Order.find({
+      $or: [
+        { 'customerInfo.email': user.email },
+        { 'customerInfo.phone': user.phone }
+      ]
+    }).sort({ createdAt: -1 });
+
+    res.json({ orders });
+  } catch (error) {
+    console.error('Get orders error:', error);
+    res.status(500).json({ message: "Error fetching orders", error: error.message });
+  }
+});
+
 // Create Order
 router.post("/orders", async (req, res) => {
   try {
