@@ -33,7 +33,7 @@ const menuItemSchema = new mongoose.Schema({
   }],
   isVegetarian: {
     type: Boolean,
-    default: false
+    default: true
   },
   isAvailable: {
     type: Boolean,
