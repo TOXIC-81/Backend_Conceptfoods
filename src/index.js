@@ -23,6 +23,7 @@ app.use(cors({
     "http://127.0.0.1:3000",
     "http://localhost:3000",
     "https://cute-meerkat-a9db53.netlify.app"
+    "https://silly-maamoul-a8a811.netlify.app"
   ],
   credentials: true
 }));
@@ -51,3 +52,4 @@ mongoose
     );
   })
   .catch(console.error);
+
