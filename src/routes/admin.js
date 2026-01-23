@@ -227,6 +227,18 @@ router.get('/cheese-boards/:type', async (req, res) => {
   }
 });
 
+// Create cheese board
+router.post('/cheese-boards', adminAuth, async (req, res) => {
+  try {
+    const board = new CheeseBoard(req.body);
+    await board.save();
+    res.status(201).json({ message: 'Cheese board created successfully', board });
+  } catch (error) {
+    console.error('Error creating cheese board:', error);
+    res.status(500).json({ error: 'Failed to create cheese board' });
+  }
+});
+
 // Update cheese board
 router.put('/cheese-boards/:id', adminAuth, async (req, res) => {
   try {
