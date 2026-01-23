@@ -173,6 +173,7 @@ router.get("/user-orders", async (req, res) => {
 // Create Order
 router.post("/orders", async (req, res) => {
   try {
+    console.log('Received order data:', JSON.stringify(req.body, null, 2));
     const orderData = req.body;
     
     // Generate order number
@@ -187,13 +188,15 @@ router.post("/orders", async (req, res) => {
       },
       orderType: orderData.orderType,
       items: orderData.items || [],
-      cheeseBoard: orderData.cheeseBoard,
+      cheeseBoard: orderData.cheeseBoard || null,
       totalPrice: orderData.totalPrice,
       notes: orderData.orderDetails?.specialInstructions,
       status: 'pending'
     });
     
+    console.log('Saving order:', JSON.stringify(order, null, 2));
     await order.save();
+    console.log('Order saved successfully with ID:', order._id);
     
     res.status(201).json({
       message: "Order placed successfully",

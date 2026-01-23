@@ -23,7 +23,9 @@ const orderSchema = new mongoose.Schema({
     quantity: { type: Number, default: 1 }
   }],
   cheeseBoard: {
-    type: String,
+    type: {
+      type: String
+    },
     boardName: String,
     selections: mongoose.Schema.Types.Mixed
   },
