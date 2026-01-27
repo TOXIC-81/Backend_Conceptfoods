@@ -9,6 +9,7 @@ import simpleAuthRoutes from "./routes/simple-auth.js";
 import adminRoutes from "./routes/admin.js";
 import cheeseBoardRoutes from "./routes/cheese-boards.js";
 import imageRoutes from "./routes/images.js";
+import { performanceMiddleware } from "./middleware/performance.js";
 
 dotenv.config();
 
@@ -16,6 +17,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// Performance middleware
+app.use(performanceMiddleware.responseTime);
+app.use(performanceMiddleware.memoryOptimization);
+app.use(performanceMiddleware.rateLimit(200, 60000)); // 200 requests per minute
 
 app.use(cors({
   origin: [
@@ -33,20 +39,26 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Serve uploaded images
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve uploaded images with caching
+app.use('/uploads', performanceMiddleware.cache(3600), express.static(path.join(__dirname, '../uploads')));
 
 app.get("/", (req, res) => {
   res.send("API is running");
 });
 
+// Apply caching to menu items endpoint
+app.use("/api/admin/menu-items", performanceMiddleware.cache(300)); // 5 minutes cache
+
 app.use("/api/auth", authRoutes);
 app.use("/api/simple", simpleAuthRoutes);
-app.use("/api/admin", adminRoutes);
+app.use("/api/admin", performanceMiddleware.dbOptimization, adminRoutes);
 app.use("/api", cheeseBoardRoutes);
 // Also mount cheeseBoard routes under /api/admin to remain compatible with frontend paths
 app.use("/api/admin", cheeseBoardRoutes);
 app.use("/api/images", imageRoutes);
+
+// Error handling
+app.use(performanceMiddleware.errorHandler);
 
 mongoose
   .connect(process.env.MONGO_URI)

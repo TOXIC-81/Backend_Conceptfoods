@@ -86,7 +86,13 @@ router.get("/menu-items", async (req, res) => {
   try {
     const { category } = req.query;
     const filter = category ? { category, isAvailable: true } : { isAvailable: true };
-    const items = await MenuItem.find(filter).sort({ sortOrder: 1, name: 1 });
+    
+    // Use lean queries for better performance
+    const items = await MenuItem.find(filter)
+      .lean()
+      .sort({ sortOrder: 1, name: 1 })
+      .limit(req.dbOptions?.limit || 100);
+      
     res.json({ items });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -98,7 +104,13 @@ router.get("/menu-items-admin", adminAuth, async (req, res) => {
   try {
     const { category } = req.query;
     const filter = category ? { category } : {};
-    const items = await MenuItem.find(filter).sort({ createdAt: -1 });
+    
+    // Use lean queries and pagination for better performance
+    const items = await MenuItem.find(filter)
+      .lean()
+      .sort({ createdAt: -1 })
+      .limit(req.dbOptions?.limit || 100);
+      
     res.json({ items });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -179,7 +191,11 @@ router.post("/update-content", adminAuth, async (req, res) => {
 // Get website content
 router.get("/content", async (req, res) => {
   try {
-    const content = await Content.find().sort({ type: 1, index: 1 });
+    const content = await Content.find()
+      .lean()
+      .sort({ type: 1, index: 1 })
+      .limit(50); // Reasonable limit for content
+      
     res.json({ content });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -205,7 +221,7 @@ router.get("/profile", adminAuth, async (req, res) => {
 // Get cheese boards
 router.get('/cheese-boards', async (req, res) => {
   try {
-    const boards = await CheeseBoard.find();
+    const boards = await CheeseBoard.find().lean().limit(20);
     res.json({ boards });
   } catch (error) {
     console.error('Error fetching cheese boards:', error);
@@ -269,7 +285,16 @@ router.post('/orders', async (req, res) => {
 // Get all orders (admin only)
 router.get('/orders', adminAuth, async (req, res) => {
   try {
-    const orders = await Order.find().sort({ createdAt: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
+    
+    const orders = await Order.find()
+      .lean()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+      
     res.json({ orders });
   } catch (error) {
     console.error('Error fetching orders:', error);
