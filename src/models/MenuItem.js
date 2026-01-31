@@ -17,12 +17,13 @@ const menuItemSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['cheese', 'bread', 'dip', 'fresh-fruit', 'dry-fruit', 'addon', 'curate-box-item', 'cheese-board'],
+    enum: ['catering', 'grazing', 'boxes', 'cheese-boards'],
     required: true
   },
   subcategory: {
     type: String,
-    trim: true
+    trim: true,
+    required: true
   },
   image: {
     type: String,

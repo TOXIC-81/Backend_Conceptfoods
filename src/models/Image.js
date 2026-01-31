@@ -23,7 +23,16 @@ const imageSchema = new mongoose.Schema({
   },
   category: {
     type: String,
+    enum: ['home', 'gallery', 'menu'],
     default: 'general'
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  sortOrder: {
+    type: Number,
+    default: 0
   },
   uploadedAt: {
     type: Date,

@@ -1,6 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import Order from "../models/Order.js";
 import OTP from "../models/OTP.js";
 import emailService from "../services/emailService.js";
 
@@ -169,6 +170,35 @@ router.get("/profile", async (req, res) => {
     }
 
     res.json({ user });
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token" });
+  }
+});
+
+// Get User Orders
+router.get("/orders", async (req, res) => {
+  try {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Get orders for this user (by userId or by email)
+    const orders = await Order.find({
+      $or: [
+        { userId: user._id },
+        { 'customerInfo.email': user.email }
+      ]
+    }).sort({ createdAt: -1 }).limit(50);
+
+    res.json({ orders });
   } catch (error) {
     res.status(401).json({ message: "Invalid token" });
   }

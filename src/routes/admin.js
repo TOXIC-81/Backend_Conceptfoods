@@ -3,9 +3,12 @@ import jwt from "jsonwebtoken";
 import Admin from "../models/Admin.js";
 import User from "../models/User.js";
 import MenuItem from "../models/MenuItem.js";
+import Category from "../models/Category.js";
 import Content from "../models/Content.js";
 import CheeseBoard from "../models/CheeseBoard.js";
 import Order from "../models/Order.js";
+import Image from "../models/Image.js";
+import MenuLimit from "../models/MenuLimit.js";
 
 const router = express.Router();
 
@@ -81,17 +84,25 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Get menu items by category (public endpoint)
+// Get menu items by category (public endpoint) - Optimized version
 router.get("/menu-items", async (req, res) => {
   try {
     const { category } = req.query;
     const filter = category ? { category, isAvailable: true } : { isAvailable: true };
     
-    // Use lean queries for better performance
+    // Use lean queries and projection for better performance
     const items = await MenuItem.find(filter)
+      .select('name category subcategory price description isVegetarian sortOrder')
       .lean()
       .sort({ sortOrder: 1, name: 1 })
-      .limit(req.dbOptions?.limit || 100);
+      .limit(150);
+      
+    // Set cache headers for client-side caching
+    res.set({
+      'Cache-Control': 'public, max-age=600',
+      'ETag': `"${Date.now()}"`,
+      'Last-Modified': new Date().toUTCString()
+    });
       
     res.json({ items });
   } catch (error) {
@@ -99,17 +110,25 @@ router.get("/menu-items", async (req, res) => {
   }
 });
 
-// Get all menu items (admin only)
+// Get all menu items (admin only) - Optimized version
 router.get("/menu-items-admin", adminAuth, async (req, res) => {
   try {
     const { category } = req.query;
     const filter = category ? { category } : {};
     
-    // Use lean queries and pagination for better performance
+    // Use lean queries and projection for better performance
     const items = await MenuItem.find(filter)
+      .select('name category subcategory isAvailable sortOrder createdAt')
       .lean()
-      .sort({ createdAt: -1 })
-      .limit(req.dbOptions?.limit || 100);
+      .sort({ sortOrder: 1, name: 1 })
+      .limit(200);
+      
+    // Set cache headers for client-side caching
+    res.set({
+      'Cache-Control': 'public, max-age=300',
+      'ETag': `"${Date.now()}"`,
+      'Last-Modified': new Date().toUTCString()
+    });
       
     res.json({ items });
   } catch (error) {
@@ -316,4 +335,105 @@ router.put('/orders/:id', adminAuth, async (req, res) => {
   }
 });
 
+// Get categories by type
+router.get('/categories/:type', async (req, res) => {
+  try {
+    const categories = await Category.find({ type: req.params.type, isActive: true })
+      .sort({ sortOrder: 1, name: 1 })
+      .lean();
+    res.json({ categories });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
+// Create/Update category (admin only)
+router.post('/categories', adminAuth, async (req, res) => {
+  try {
+    const category = new Category(req.body);
+    await category.save();
+    res.status(201).json({ message: 'Category created successfully', category });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create category' });
+  }
+});
+
+// Update category (admin only)
+router.put('/categories/:id', adminAuth, async (req, res) => {
+  try {
+    const category = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+    res.json({ message: 'Category updated successfully', category });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update category' });
+  }
+});
+
+// Get images by category
+router.get('/images/:category', async (req, res) => {
+  try {
+    const images = await Image.find({ category: req.params.category, isActive: true })
+      .select('-data') // Exclude binary data for listing
+      .sort({ sortOrder: 1, uploadedAt: -1 })
+      .lean();
+    res.json({ images });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch images' });
+  }
+});
+
+// Upload image (admin only)
+router.post('/images', adminAuth, async (req, res) => {
+  try {
+    const image = new Image(req.body);
+    await image.save();
+    res.status(201).json({ message: 'Image uploaded successfully', image: { ...image.toObject(), data: undefined } });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to upload image' });
+  }
+});
+
 export default router;
+// Get menu limits
+router.get('/menu-limits', async (req, res) => {
+  try {
+    const { menuType, menuVariant } = req.query;
+    const filter = {};
+    if (menuType) filter.menuType = menuType;
+    if (menuVariant) filter.menuVariant = menuVariant;
+    
+    const limits = await MenuLimit.find(filter).sort({ menuType: 1, menuVariant: 1, category: 1 });
+    res.json({ limits });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch menu limits' });
+  }
+});
+
+// Create/Update menu limit
+router.post('/menu-limits', adminAuth, async (req, res) => {
+  try {
+    const { menuType, menuVariant, category, limit } = req.body;
+    
+    const menuLimit = await MenuLimit.findOneAndUpdate(
+      { menuType, menuVariant, category },
+      { limit, isActive: true },
+      { new: true, upsert: true }
+    );
+    
+    res.json({ message: 'Menu limit updated successfully', menuLimit });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update menu limit' });
+  }
+});
+
+// Delete menu limit
+router.delete('/menu-limits/:id', adminAuth, async (req, res) => {
+  try {
+    await MenuLimit.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Menu limit deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete menu limit' });
+  }
+});

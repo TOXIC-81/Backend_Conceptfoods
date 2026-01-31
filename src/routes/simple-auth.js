@@ -176,11 +176,25 @@ router.post("/orders", async (req, res) => {
     console.log('Received order data:', JSON.stringify(req.body, null, 2));
     const orderData = req.body;
     
+    // Check if user is logged in
+    let userId = null;
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        userId = decoded.userId;
+      } catch (error) {
+        // Token invalid, continue as guest order
+        console.log('Invalid token, creating guest order');
+      }
+    }
+    
     // Generate order number
     const orderNumber = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
     
     const order = new Order({
       orderNumber,
+      userId: userId, // Link to user if logged in
       customerInfo: {
         name: orderData.orderDetails?.name,
         email: orderData.customerInfo?.email,

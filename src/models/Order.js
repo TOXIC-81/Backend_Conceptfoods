@@ -6,6 +6,11 @@ const orderSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false // Optional for guest orders
+  },
   customerInfo: {
     name: String,
     email: String,

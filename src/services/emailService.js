@@ -36,7 +36,7 @@ class EmailService {
             <p>If you didn't request this, please ignore this email.</p>
           </div>
           <div style="background: #272727; padding: 15px; text-align: center;">
-            <p style="color: white; margin: 0; font-size: 12px;">© 2023 Concept Foods. All rights reserved.</p>
+            <p style="color: white; margin: 0; font-size: 12px;">© 2026 Concept Foods. All rights reserved.</p>
           </div>
         </div>
       `
@@ -66,7 +66,7 @@ class EmailService {
             <p>If you didn't request this, please ignore this email and your password will remain unchanged.</p>
           </div>
           <div style="background: #272727; padding: 15px; text-align: center;">
-            <p style="color: white; margin: 0; font-size: 12px;">© 2023 Concept Foods. All rights reserved.</p>
+            <p style="color: white; margin: 0; font-size: 12px;">© 2026 Concept Foods. All rights reserved.</p>
           </div>
         </div>
       `
