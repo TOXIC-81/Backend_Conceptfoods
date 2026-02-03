@@ -33,7 +33,10 @@ app.use(cors({
     "http://localhost:3000",
     "https://cute-meerkat-a9db53.netlify.app",
     "https://silly-maamoul-a8a811.netlify.app",
-    /\.netlify\.app$/
+    "https://conceptfoods.in",
+    "http://conceptfoods.in",
+    /\.netlify\.app$/,
+    /\.conceptfoods\.in$/
   ],
   credentials: true
 }));
