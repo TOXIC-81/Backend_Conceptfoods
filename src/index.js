@@ -31,12 +31,11 @@ app.use(cors({
     "http://localhost:5502",
     "http://127.0.0.1:3000",
     "http://localhost:3000",
+    "https://conceptfoods.in",
+    "https://www.conceptfoods.in",
     "https://cute-meerkat-a9db53.netlify.app",
     "https://silly-maamoul-a8a811.netlify.app",
-    "https://conceptfoods.in",
-    "http://conceptfoods.in",
-    /\.netlify\.app$/,
-    /\.conceptfoods\.in$/
+    /\.netlify\.app$/
   ],
   credentials: true
 }));

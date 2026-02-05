@@ -17,7 +17,7 @@ const menuItemSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['catering', 'grazing', 'boxes', 'cheese-boards'],
+    enum: ['catering', 'grazing', 'boxes', 'cheese-boards', 'curate-box-item', 'cheese-board'],
     required: true
   },
   subcategory: {

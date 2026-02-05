@@ -197,8 +197,13 @@ router.post("/orders", async (req, res) => {
       userId: userId, // Link to user if logged in
       customerInfo: {
         name: orderData.orderDetails?.name,
-        email: orderData.customerInfo?.email,
-        phone: orderData.customerInfo?.phone
+        email: orderData.customerInfo?.email || orderData.orderDetails?.email,
+        phone: orderData.orderDetails?.phone || orderData.customerInfo?.phone,
+        address: orderData.orderDetails?.address
+      },
+      orderDetails: {
+        readyTime: orderData.orderDetails?.readyTime,
+        pincode: orderData.orderDetails?.pincode
       },
       orderType: orderData.orderType,
       items: orderData.items || [],

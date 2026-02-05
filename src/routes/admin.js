@@ -114,14 +114,18 @@ router.get("/menu-items", async (req, res) => {
 router.get("/menu-items-admin", adminAuth, async (req, res) => {
   try {
     const { category } = req.query;
+    console.log('Fetching admin menu items for category:', category);
+    
     const filter = category ? { category } : {};
     
     // Use lean queries and projection for better performance
     const items = await MenuItem.find(filter)
-      .select('name category subcategory isAvailable sortOrder createdAt')
+      .select('name category subcategory price description isVegetarian isAvailable sortOrder createdAt')
       .lean()
       .sort({ sortOrder: 1, name: 1 })
       .limit(200);
+      
+    console.log(`Found ${items.length} items for category: ${category}`);
       
     // Set cache headers for client-side caching
     res.set({
@@ -132,6 +136,7 @@ router.get("/menu-items-admin", adminAuth, async (req, res) => {
       
     res.json({ items });
   } catch (error) {
+    console.error('Error fetching admin menu items:', error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -139,18 +144,55 @@ router.get("/menu-items-admin", adminAuth, async (req, res) => {
 // Create menu item
 router.post("/menu-items", adminAuth, async (req, res) => {
   try {
+    console.log('Creating menu item with data:', req.body);
+    
+    // Validate required fields
+    if (!req.body.name || !req.body.category || !req.body.subcategory) {
+      return res.status(400).json({ 
+        message: "Missing required fields", 
+        error: "Name, category, and subcategory are required" 
+      });
+    }
+    
     const item = new MenuItem(req.body);
-    await item.save();
-    res.status(201).json({ message: "Menu item created successfully", item });
+    const savedItem = await item.save();
+    
+    console.log('Menu item created successfully:', savedItem._id);
+    res.status(201).json({ 
+      message: "Menu item created successfully", 
+      item: savedItem 
+    });
   } catch (error) {
     console.error("Error creating menu item:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    
+    // Provide more specific error messages
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ 
+        message: "Validation failed", 
+        error: validationErrors.join(', ') 
+      });
+    }
+    
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        message: "Duplicate item", 
+        error: "An item with this name already exists" 
+      });
+    }
+    
+    res.status(500).json({ 
+      message: "Server error", 
+      error: error.message || "Unknown error occurred" 
+    });
   }
 });
 
 // Update menu item
 router.put("/menu-items/:id", adminAuth, async (req, res) => {
   try {
+    console.log('Updating menu item:', req.params.id, 'with data:', req.body);
+    
     const item = await MenuItem.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -161,10 +203,34 @@ router.put("/menu-items/:id", adminAuth, async (req, res) => {
       return res.status(404).json({ message: "Menu item not found" });
     }
     
-    res.json({ message: "Menu item updated successfully", item });
+    console.log('Menu item updated successfully:', item._id);
+    res.json({ 
+      message: "Menu item updated successfully", 
+      item: item 
+    });
   } catch (error) {
     console.error("Error updating menu item:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    
+    // Provide more specific error messages
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ 
+        message: "Validation failed", 
+        error: validationErrors.join(', ') 
+      });
+    }
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({ 
+        message: "Invalid item ID", 
+        error: "The provided item ID is not valid" 
+      });
+    }
+    
+    res.status(500).json({ 
+      message: "Server error", 
+      error: error.message || "Unknown error occurred" 
+    });
   }
 });
 

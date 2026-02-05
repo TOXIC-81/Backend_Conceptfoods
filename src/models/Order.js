@@ -17,10 +17,14 @@ const orderSchema = new mongoose.Schema({
     phone: String,
     address: String
   },
+  orderDetails: {
+    readyTime: Date,
+    pincode: String
+  },
   orderType: {
     type: String,
     required: true,
-    enum: ['cheese-board', 'curate-box']
+    enum: ['cheese-board', 'curate-box', 'catering', 'grazing', 'grazing-table']
   },
   items: [{
     name: String,
@@ -33,6 +37,16 @@ const orderSchema = new mongoose.Schema({
     },
     boardName: String,
     selections: mongoose.Schema.Types.Mixed
+  },
+  grazingTable: {
+    tableName: String,
+    selections: mongoose.Schema.Types.Mixed
+  },
+  catering: {
+    menuName: String,
+    selections: mongoose.Schema.Types.Mixed,
+    pricePerPerson: Number,
+    minimumPax: Number
   },
   totalPrice: {
     type: Number,
