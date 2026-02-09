@@ -9,6 +9,7 @@ import CheeseBoard from "../models/CheeseBoard.js";
 import Order from "../models/Order.js";
 import Image from "../models/Image.js";
 import MenuLimit from "../models/MenuLimit.js";
+import SubcategoryLimit from "../models/SubcategoryLimit.js";
 
 const router = express.Router();
 
@@ -501,5 +502,73 @@ router.delete('/menu-limits/:id', adminAuth, async (req, res) => {
     res.json({ message: 'Menu limit deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete menu limit' });
+  }
+});
+
+// Get subcategory limits (unified for all pages)
+router.get('/subcategory-limits', async (req, res) => {
+  try {
+    const { page, pageVariant } = req.query;
+    const filter = { isActive: true };
+    if (page) filter.page = page;
+    if (pageVariant) filter.pageVariant = pageVariant;
+    
+    const limits = await SubcategoryLimit.find(filter)
+      .sort({ page: 1, pageVariant: 1, subcategory: 1 })
+      .lean();
+    res.json({ limits });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch subcategory limits' });
+  }
+});
+
+// Create/Update subcategory limit
+router.post('/subcategory-limits', adminAuth, async (req, res) => {
+  try {
+    const { page, pageVariant, subcategory, limit } = req.body;
+    
+    const subcategoryLimit = await SubcategoryLimit.findOneAndUpdate(
+      { page, pageVariant, subcategory },
+      { limit, isActive: true },
+      { new: true, upsert: true }
+    );
+    
+    res.json({ message: 'Subcategory limit updated successfully', subcategoryLimit });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update subcategory limit' });
+  }
+});
+
+// Bulk update subcategory limits
+router.post('/subcategory-limits/bulk', adminAuth, async (req, res) => {
+  try {
+    const { limits } = req.body;
+    
+    if (!Array.isArray(limits)) {
+      return res.status(400).json({ error: 'Limits must be an array' });
+    }
+    
+    const operations = limits.map(({ page, pageVariant, subcategory, limit }) => ({
+      updateOne: {
+        filter: { page, pageVariant, subcategory },
+        update: { limit, isActive: true },
+        upsert: true
+      }
+    }));
+    
+    await SubcategoryLimit.bulkWrite(operations);
+    res.json({ message: 'Subcategory limits updated successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to bulk update subcategory limits' });
+  }
+});
+
+// Delete subcategory limit
+router.delete('/subcategory-limits/:id', adminAuth, async (req, res) => {
+  try {
+    await SubcategoryLimit.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Subcategory limit deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete subcategory limit' });
   }
 });
