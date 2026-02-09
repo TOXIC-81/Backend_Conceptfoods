@@ -208,6 +208,8 @@ router.post("/orders", async (req, res) => {
       orderType: orderData.orderType,
       items: orderData.items || [],
       cheeseBoard: orderData.cheeseBoard || null,
+      grazingTable: orderData.grazingTable || null,
+      catering: orderData.catering || null,
       totalPrice: orderData.totalPrice,
       notes: orderData.orderDetails?.specialInstructions,
       status: 'pending'
