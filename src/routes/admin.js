@@ -128,11 +128,11 @@ router.get("/menu-items-admin", adminAuth, async (req, res) => {
       
     console.log(`Found ${items.length} items for category: ${category}`);
       
-    // Set cache headers for client-side caching
+    // Disable caching for admin endpoint to always get fresh data
     res.set({
-      'Cache-Control': 'public, max-age=300',
-      'ETag': `"${Date.now()}"`,
-      'Last-Modified': new Date().toUTCString()
+      'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+      'Pragma': 'no-cache',
+      'Expires': '0'
     });
       
     res.json({ items });
