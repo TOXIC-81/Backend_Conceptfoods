@@ -355,6 +355,135 @@ router.put('/cheese-boards/:id', adminAuth, async (req, res) => {
   }
 });
 
+// Add item to cheese board category
+router.post('/cheese-boards/:boardId/items', adminAuth, async (req, res) => {
+  try {
+    const { boardId } = req.params;
+    const { categoryName, itemName, isVegetarian } = req.body;
+    
+    const board = await CheeseBoard.findById(boardId);
+    if (!board) {
+      return res.status(404).json({ error: 'Cheese board not found' });
+    }
+    
+    // Find or create category
+    let category = board.categories.find(cat => cat.name === categoryName);
+    if (!category) {
+      category = { name: categoryName, items: [] };
+      board.categories.push(category);
+    }
+    
+    // Add item to category
+    const categoryIndex = board.categories.findIndex(cat => cat.name === categoryName);
+    board.categories[categoryIndex].items.push({ name: itemName, isVegetarian });
+    
+    await board.save();
+    res.json({ message: 'Item added successfully', board });
+  } catch (error) {
+    console.error('Error adding item:', error);
+    res.status(500).json({ error: 'Failed to add item' });
+  }
+});
+
+// Delete item from cheese board category
+router.delete('/cheese-boards/:boardId/items/:itemName', adminAuth, async (req, res) => {
+  try {
+    const { boardId, itemName } = req.params;
+    const { categoryName } = req.query;
+    
+    const board = await CheeseBoard.findById(boardId);
+    if (!board) {
+      return res.status(404).json({ error: 'Cheese board not found' });
+    }
+    
+    const category = board.categories.find(cat => cat.name === categoryName);
+    if (category) {
+      category.items = category.items.filter(item => item.name !== itemName);
+      await board.save();
+    }
+    
+    res.json({ message: 'Item deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting item:', error);
+    res.status(500).json({ error: 'Failed to delete item' });
+  }
+});
+
+// Initialize default cheese boards
+router.post('/cheese-boards/initialize', adminAuth, async (req, res) => {
+  try {
+    const count = await CheeseBoard.countDocuments();
+    if (count > 0) {
+      return res.json({ message: 'Cheese boards already exist', count });
+    }
+    
+    const defaultBoards = [
+      {
+        name: 'Classic Cheese Board',
+        type: 'classic',
+        price: 2100,
+        description: '800gms • Serves 2-3',
+        categories: [
+          { name: 'Cheese Selection', items: [] },
+          { name: 'Breads & Crisps', items: [] },
+          { name: 'Dips', items: [] },
+          { name: 'Fresh Fruits', items: [] },
+          { name: 'Dry Fruits', items: [] },
+          { name: 'Add Ons', items: [] }
+        ]
+      },
+      {
+        name: 'Indian Cheese Board',
+        type: 'indian',
+        price: 2500,
+        description: '1000gms • Serves 4-6',
+        categories: [
+          { name: 'Cheese Selection', items: [] },
+          { name: 'Breads & Crisps', items: [] },
+          { name: 'Dips', items: [] },
+          { name: 'Fresh Fruits', items: [] },
+          { name: 'Dry Fruits', items: [] },
+          { name: 'Add Ons', items: [] }
+        ]
+      },
+      {
+        name: 'Silver Cheese Board',
+        type: 'silver',
+        price: 3500,
+        description: '1000gms • Serves 4-6',
+        categories: [
+          { name: 'Cheese Selection', items: [] },
+          { name: 'Breads & Crisps', items: [] },
+          { name: 'Dips', items: [] },
+          { name: 'Fresh Fruits', items: [] },
+          { name: 'Dry Fruits', items: [] },
+          { name: 'Add Ons', items: [] }
+        ]
+      },
+      {
+        name: 'Gold Cheese Board',
+        type: 'gold',
+        price: 5000,
+        description: '1500gms • Serves 6-8',
+        categories: [
+          { name: 'Cheese Selection', items: [] },
+          { name: 'Breads & Crisps', items: [] },
+          { name: 'Dips', items: [] },
+          { name: 'Fresh Fruits', items: [] },
+          { name: 'Dry Fruits', items: [] },
+          { name: 'Add Ons', items: [] }
+        ]
+      }
+    ];
+    
+    await CheeseBoard.insertMany(defaultBoards);
+    res.json({ message: 'Cheese boards initialized successfully', count: defaultBoards.length });
+  } catch (error) {
+    console.error('Error initializing cheese boards:', error);
+    res.status(500).json({ error: 'Failed to initialize cheese boards' });
+  }
+});
+
 // Create order
 router.post('/orders', async (req, res) => {
   try {
