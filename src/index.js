@@ -9,6 +9,7 @@ import simpleAuthRoutes from "./routes/simple-auth.js";
 import adminRoutes from "./routes/admin.js";
 import cheeseBoardRoutes from "./routes/cheese-boards.js";
 import imageRoutes from "./routes/images.js";
+import testimonialRoutes from "./routes/testimonials.js";
 import { performanceMiddleware } from "./middleware/performance.js";
 
 dotenv.config();
@@ -59,6 +60,8 @@ app.use("/api", cheeseBoardRoutes);
 // Also mount cheeseBoard routes under /api/admin to remain compatible with frontend paths
 app.use("/api/admin", cheeseBoardRoutes);
 app.use("/api/images", imageRoutes);
+app.use("/api", testimonialRoutes);
+app.use("/api/admin", testimonialRoutes);
 
 // Error handling
 app.use(performanceMiddleware.errorHandler);
