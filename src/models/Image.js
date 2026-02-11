@@ -26,9 +26,6 @@ const imageSchema = new mongoose.Schema({
     enum: ['hero', 'service', 'promo', 'gallery', 'menu'],
     default: 'general'
   },
-  imageUrl: {
-    type: String
-  },
   isActive: {
     type: Boolean,
     default: true

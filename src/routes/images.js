@@ -4,13 +4,10 @@ import Image from '../models/Image.js';
 
 const router = express.Router();
 
-// Configure multer for memory storage
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  },
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -23,40 +20,27 @@ const upload = multer({
 // Upload image
 router.post('/upload', upload.single('image'), async (req, res) => {
   try {
-    if (!req.file && !req.body.imageUrl) {
-      return res.status(400).json({ error: 'No image file or URL provided' });
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
     }
 
-    const imageData = {
+    const image = new Image({
+      filename: req.file.originalname,
+      originalName: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      data: req.file.buffer,
       category: req.body.category || 'general',
-      sortOrder: parseInt(req.body.sortOrder) || 0,
-      isActive: req.body.isActive !== 'false'
-    };
+      sortOrder: parseInt(req.body.sortOrder) || 0
+    });
 
-    if (req.body.imageUrl) {
-      imageData.imageUrl = req.body.imageUrl;
-      imageData.filename = req.body.imageUrl.split('/').pop();
-      imageData.originalName = imageData.filename;
-      imageData.mimetype = 'image/jpeg';
-      imageData.size = 0;
-      imageData.data = Buffer.from('');
-    } else {
-      imageData.filename = req.file.originalname;
-      imageData.originalName = req.file.originalname;
-      imageData.mimetype = req.file.mimetype;
-      imageData.size = req.file.size;
-      imageData.data = req.file.buffer;
-    }
-
-    const image = new Image(imageData);
     await image.save();
     
     res.json({
       success: true,
       imageId: image._id,
       filename: image.filename,
-      category: image.category,
-      imageUrl: image.imageUrl
+      category: image.category
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -100,12 +84,11 @@ router.get('/', async (req, res) => {
 // Update image
 router.put('/:id', async (req, res) => {
   try {
-    const { sortOrder, isActive, imageUrl } = req.body;
+    const { sortOrder, isActive } = req.body;
     const updateData = {};
     
     if (sortOrder !== undefined) updateData.sortOrder = sortOrder;
     if (isActive !== undefined) updateData.isActive = isActive;
-    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
     
     const image = await Image.findByIdAndUpdate(req.params.id, updateData, { new: true }).select('-data');
     
