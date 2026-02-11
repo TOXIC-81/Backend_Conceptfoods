@@ -23,26 +23,40 @@ const upload = multer({
 // Upload image
 router.post('/upload', upload.single('image'), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No image file provided' });
+    if (!req.file && !req.body.imageUrl) {
+      return res.status(400).json({ error: 'No image file or URL provided' });
     }
 
-    const image = new Image({
-      filename: req.file.originalname,
-      originalName: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      data: req.file.buffer,
-      category: req.body.category || 'general'
-    });
+    const imageData = {
+      category: req.body.category || 'general',
+      sortOrder: parseInt(req.body.sortOrder) || 0,
+      isActive: req.body.isActive !== 'false'
+    };
 
+    if (req.body.imageUrl) {
+      imageData.imageUrl = req.body.imageUrl;
+      imageData.filename = req.body.imageUrl.split('/').pop();
+      imageData.originalName = imageData.filename;
+      imageData.mimetype = 'image/jpeg';
+      imageData.size = 0;
+      imageData.data = Buffer.from('');
+    } else {
+      imageData.filename = req.file.originalname;
+      imageData.originalName = req.file.originalname;
+      imageData.mimetype = req.file.mimetype;
+      imageData.size = req.file.size;
+      imageData.data = req.file.buffer;
+    }
+
+    const image = new Image(imageData);
     await image.save();
     
     res.json({
       success: true,
       imageId: image._id,
       filename: image.filename,
-      category: image.category
+      category: image.category,
+      imageUrl: image.imageUrl
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -74,10 +88,32 @@ router.get('/:id', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const { category } = req.query;
-    const filter = category ? { category } : {};
+    const filter = category ? { category, isActive: true } : { isActive: true };
     
-    const images = await Image.find(filter).select('-data');
+    const images = await Image.find(filter).select('-data').sort({ sortOrder: 1, uploadedAt: -1 });
     res.json(images);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update image
+router.put('/:id', async (req, res) => {
+  try {
+    const { sortOrder, isActive, imageUrl } = req.body;
+    const updateData = {};
+    
+    if (sortOrder !== undefined) updateData.sortOrder = sortOrder;
+    if (isActive !== undefined) updateData.isActive = isActive;
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    
+    const image = await Image.findByIdAndUpdate(req.params.id, updateData, { new: true }).select('-data');
+    
+    if (!image) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    res.json({ success: true, image });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
