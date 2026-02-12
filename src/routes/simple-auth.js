@@ -37,7 +37,7 @@ router.post("/register-simple", async (req, res) => {
     await user.save();
     console.log('User created successfully:', user._id);
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
 
     res.status(201).json({
       message: "User created successfully",
@@ -70,7 +70,7 @@ router.post("/login", async (req, res) => {
     if (email === 'admin@conceptfoods.in') {
       const admin = await Admin.findOne({ email });
       if (admin && await admin.comparePassword(password)) {
-        const token = jwt.sign({ adminId: admin._id }, process.env.JWT_SECRET, { expiresIn: "24h" });
+        const token = jwt.sign({ adminId: admin._id }, process.env.JWT_SECRET);
         return res.json({
           message: "Admin login successful",
           token,
@@ -100,7 +100,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
 
     res.json({
       message: "Login successful",
