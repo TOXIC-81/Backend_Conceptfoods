@@ -39,7 +39,11 @@ app.use(cors({
     "https://silly-maamoul-a8a811.netlify.app",
     /\.netlify\.app$/
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400
 }));
 app.use(express.json());
 
