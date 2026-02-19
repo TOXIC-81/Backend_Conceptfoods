@@ -9,7 +9,6 @@ router.get('/cheese-boards', async (req, res) => {
         // Return shape expected by frontend: { boards: [...] }
         res.json({ boards: cheeseBoards });
     } catch (error) {
-        console.error('Error fetching cheese boards:', error);
         res.status(500).json({ error: 'Failed to fetch cheese boards' });
     }
 });
@@ -40,7 +39,6 @@ router.get('/cheese-boards/:id', async (req, res) => {
         // Return shape expected by frontend: { board: { ... } }
         res.json({ board: cheeseBoard });
     } catch (error) {
-        console.error('Error fetching cheese board:', error);
         res.status(500).json({ error: 'Failed to fetch cheese board' });
     }
 });

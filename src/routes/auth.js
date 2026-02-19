@@ -27,19 +27,14 @@ router.post("/send-registration-otp", async (req, res) => {
     const otp = emailService.generateOTP();
     await OTP.create({ email, otp, type: 'registration' });
     
-    console.log(`OTP for ${email}: ${otp}`);
-    
     try {
       await emailService.sendRegistrationOTP(email, otp);
-      console.log('Email sent successfully');
     } catch (emailError) {
-      console.error('Email send error:', emailError);
       return res.json({ message: "OTP sent successfully", warning: "Email delivery may be delayed" });
     }
 
     res.json({ message: "OTP sent successfully" });
   } catch (error) {
-    console.error('Send OTP error:', error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -84,7 +79,6 @@ router.post("/register", async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Registration error:', error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -105,19 +99,14 @@ router.post("/send-reset-otp", async (req, res) => {
     const otp = emailService.generateOTP();
     await OTP.create({ email, otp, type: 'password-reset' });
     
-    console.log(`Password Reset OTP for ${email}: ${otp}`);
-    
     try {
       await emailService.sendPasswordResetOTP(email, otp);
-      console.log('Password reset email sent successfully');
     } catch (emailError) {
-      console.error('Email send error:', emailError);
       return res.json({ message: "OTP sent successfully", warning: "Email delivery may be delayed" });
     }
 
     res.json({ message: "Password reset OTP sent successfully" });
   } catch (error) {
-    console.error('Send reset OTP error:', error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -150,7 +139,6 @@ router.post("/reset-password", async (req, res) => {
 
     res.json({ message: "Password reset successfully" });
   } catch (error) {
-    console.error('Reset password error:', error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });

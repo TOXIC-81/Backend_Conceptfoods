@@ -116,7 +116,6 @@ router.get("/menu-items", async (req, res) => {
 router.get("/menu-items-admin", adminAuth, async (req, res) => {
   try {
     const { category } = req.query;
-    console.log('Fetching admin menu items for category:', category);
     
     const filter = category ? { category } : {};
     
@@ -127,8 +126,6 @@ router.get("/menu-items-admin", adminAuth, async (req, res) => {
       .sort({ sortOrder: 1, name: 1 })
       .limit(200);
       
-    console.log(`Found ${items.length} items for category: ${category}`);
-      
     // Disable caching for admin endpoint to always get fresh data
     res.set({
       'Cache-Control': 'no-store, no-cache, must-revalidate, private',
@@ -138,7 +135,6 @@ router.get("/menu-items-admin", adminAuth, async (req, res) => {
       
     res.json({ items });
   } catch (error) {
-    console.error('Error fetching admin menu items:', error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -146,8 +142,6 @@ router.get("/menu-items-admin", adminAuth, async (req, res) => {
 // Create menu item
 router.post("/menu-items", adminAuth, async (req, res) => {
   try {
-    console.log('Creating menu item with data:', req.body);
-    
     // Validate required fields
     if (!req.body.name || !req.body.category || !req.body.subcategory) {
       return res.status(400).json({ 
@@ -159,14 +153,11 @@ router.post("/menu-items", adminAuth, async (req, res) => {
     const item = new MenuItem(req.body);
     const savedItem = await item.save();
     
-    console.log('Menu item created successfully:', savedItem._id);
     res.status(201).json({ 
       message: "Menu item created successfully", 
       item: savedItem 
     });
   } catch (error) {
-    console.error("Error creating menu item:", error);
-    
     // Provide more specific error messages
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
@@ -193,8 +184,6 @@ router.post("/menu-items", adminAuth, async (req, res) => {
 // Update menu item
 router.put("/menu-items/:id", adminAuth, async (req, res) => {
   try {
-    console.log('Updating menu item:', req.params.id, 'with data:', req.body);
-    
     const item = await MenuItem.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -205,14 +194,11 @@ router.put("/menu-items/:id", adminAuth, async (req, res) => {
       return res.status(404).json({ message: "Menu item not found" });
     }
     
-    console.log('Menu item updated successfully:', item._id);
     res.json({ 
       message: "Menu item updated successfully", 
       item: item 
     });
   } catch (error) {
-    console.error("Error updating menu item:", error);
-    
     // Provide more specific error messages
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
@@ -311,7 +297,6 @@ router.get('/cheese-boards', async (req, res) => {
     const boards = await CheeseBoard.find().lean().limit(20);
     res.json({ boards });
   } catch (error) {
-    console.error('Error fetching cheese boards:', error);
     res.status(500).json({ error: 'Failed to fetch cheese boards' });
   }
 });
@@ -325,7 +310,6 @@ router.get('/cheese-boards/:type', async (req, res) => {
     }
     res.json({ board });
   } catch (error) {
-    console.error('Error fetching cheese board:', error);
     res.status(500).json({ error: 'Failed to fetch cheese board' });
   }
 });
@@ -337,7 +321,6 @@ router.post('/cheese-boards', adminAuth, async (req, res) => {
     await board.save();
     res.status(201).json({ message: 'Cheese board created successfully', board });
   } catch (error) {
-    console.error('Error creating cheese board:', error);
     res.status(500).json({ error: 'Failed to create cheese board' });
   }
 });
@@ -351,7 +334,6 @@ router.put('/cheese-boards/:id', adminAuth, async (req, res) => {
     }
     res.json({ message: 'Cheese board updated successfully', board });
   } catch (error) {
-    console.error('Error updating cheese board:', error);
     res.status(500).json({ error: 'Failed to update cheese board' });
   }
 });
@@ -381,7 +363,6 @@ router.post('/cheese-boards/:boardId/items', adminAuth, async (req, res) => {
     await board.save();
     res.json({ message: 'Item added successfully', board });
   } catch (error) {
-    console.error('Error adding item:', error);
     res.status(500).json({ error: 'Failed to add item' });
   }
 });
@@ -405,7 +386,6 @@ router.delete('/cheese-boards/:boardId/items/:itemName', adminAuth, async (req, 
     
     res.json({ message: 'Item deleted successfully' });
   } catch (error) {
-    console.error('Error deleting item:', error);
     res.status(500).json({ error: 'Failed to delete item' });
   }
 });
@@ -480,7 +460,6 @@ router.post('/cheese-boards/initialize', adminAuth, async (req, res) => {
     await CheeseBoard.insertMany(defaultBoards);
     res.json({ message: 'Cheese boards initialized successfully', count: defaultBoards.length });
   } catch (error) {
-    console.error('Error initializing cheese boards:', error);
     res.status(500).json({ error: 'Failed to initialize cheese boards' });
   }
 });
@@ -504,15 +483,12 @@ router.post('/orders', async (req, res) => {
           totalPrice: req.body.totalPrice,
           notes: req.body.notes
         });
-        console.log(`Order confirmation email sent to ${req.body.customerInfo.email}`);
       } catch (emailError) {
-        console.error('Failed to send order confirmation email:', emailError);
       }
     }
     
     res.status(201).json({ message: 'Order created successfully', order });
   } catch (error) {
-    console.error('Error creating order:', error);
     res.status(500).json({ error: 'Failed to create order' });
   }
 });
@@ -532,7 +508,6 @@ router.get('/orders', adminAuth, async (req, res) => {
       
     res.json({ orders });
   } catch (error) {
-    console.error('Error fetching orders:', error);
     res.status(500).json({ error: 'Failed to fetch orders' });
   }
 });
@@ -546,7 +521,6 @@ router.put('/orders/:id', adminAuth, async (req, res) => {
     }
     res.json({ message: 'Order updated successfully', order });
   } catch (error) {
-    console.error('Error updating order:', error);
     res.status(500).json({ error: 'Failed to update order' });
   }
 });
