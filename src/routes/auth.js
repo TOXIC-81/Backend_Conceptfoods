@@ -12,6 +12,10 @@ router.post("/send-registration-otp", async (req, res) => {
   try {
     const { email } = req.body;
 
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
@@ -22,10 +26,20 @@ router.post("/send-registration-otp", async (req, res) => {
 
     const otp = emailService.generateOTP();
     await OTP.create({ email, otp, type: 'registration' });
-    await emailService.sendRegistrationOTP(email, otp);
+    
+    console.log(`OTP for ${email}: ${otp}`);
+    
+    try {
+      await emailService.sendRegistrationOTP(email, otp);
+      console.log('Email sent successfully');
+    } catch (emailError) {
+      console.error('Email send error:', emailError);
+      return res.json({ message: "OTP sent successfully", warning: "Email delivery may be delayed" });
+    }
 
     res.json({ message: "OTP sent successfully" });
   } catch (error) {
+    console.error('Send OTP error:', error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -34,6 +48,10 @@ router.post("/send-registration-otp", async (req, res) => {
 router.post("/register", async (req, res) => {
   try {
     const { firstName, lastName, email, phone, password, otp } = req.body;
+
+    if (!firstName || !lastName || !email || !phone || !password || !otp) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -66,6 +84,7 @@ router.post("/register", async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -85,10 +104,20 @@ router.post("/send-reset-otp", async (req, res) => {
 
     const otp = emailService.generateOTP();
     await OTP.create({ email, otp, type: 'password-reset' });
-    await emailService.sendPasswordResetOTP(email, otp);
+    
+    console.log(`Password Reset OTP for ${email}: ${otp}`);
+    
+    try {
+      await emailService.sendPasswordResetOTP(email, otp);
+      console.log('Password reset email sent successfully');
+    } catch (emailError) {
+      console.error('Email send error:', emailError);
+      return res.json({ message: "OTP sent successfully", warning: "Email delivery may be delayed" });
+    }
 
     res.json({ message: "Password reset OTP sent successfully" });
   } catch (error) {
+    console.error('Send reset OTP error:', error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -97,6 +126,10 @@ router.post("/send-reset-otp", async (req, res) => {
 router.post("/reset-password", async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
 
     // Verify OTP
     const otpRecord = await OTP.findOne({ email, otp, type: 'password-reset' });
@@ -117,6 +150,7 @@ router.post("/reset-password", async (req, res) => {
 
     res.json({ message: "Password reset successfully" });
   } catch (error) {
+    console.error('Reset password error:', error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });

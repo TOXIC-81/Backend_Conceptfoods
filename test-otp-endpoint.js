@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 const testOTP = async () => {
   try {
     console.log('Testing OTP endpoint...');
-    const response = await fetch('https://backend-conceptfoods.onrender.com/api/auth/send-registration-otp', {
+    const response = await fetch('http://localhost:5000/api/auth/send-registration-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'test@example.com' })
