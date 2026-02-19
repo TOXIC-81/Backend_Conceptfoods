@@ -567,6 +567,19 @@ router.put('/categories/:id', adminAuth, async (req, res) => {
   }
 });
 
+// Delete category (admin only)
+router.delete('/categories/:id', adminAuth, async (req, res) => {
+  try {
+    const category = await Category.findByIdAndDelete(req.params.id);
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+    res.json({ message: 'Category deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete category' });
+  }
+});
+
 // Get images by category
 router.get('/images/:category', async (req, res) => {
   try {
