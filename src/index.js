@@ -26,8 +26,6 @@ app.use(performanceMiddleware.rateLimit(200, 60000)); // 200 requests per minute
 
 app.use(cors({
   origin: [
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
     "http://127.0.0.1:5501",
     "http://localhost:5501",
     "http://127.0.0.1:5502",
@@ -36,8 +34,6 @@ app.use(cors({
     "http://localhost:3000",
     "https://conceptfoods.in",
     "https://www.conceptfoods.in",
-    "http://conceptfoods.in",
-    "http://www.conceptfoods.in",
     "https://exquisite-rolypoly-4ad624.netlify.app",
     "https://cute-meerkat-a9db53.netlify.app",
     "https://silly-maamoul-a8a811.netlify.app",
@@ -73,6 +69,9 @@ app.use(performanceMiddleware.errorHandler);
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    app.listen(process.env.PORT);
+    console.log("MongoDB connected");
+    app.listen(process.env.PORT, () =>
+      console.log(`Server running on port ${process.env.PORT}`)
+    );
   })
-  .catch(() => {});
+  .catch(console.error);

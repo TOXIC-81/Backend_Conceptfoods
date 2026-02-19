@@ -30,11 +30,14 @@ router.post("/send-registration-otp", async (req, res) => {
     try {
       await emailService.sendRegistrationOTP(email, otp);
     } catch (emailError) {
+      console.error('Email send error:', emailError);
+      // Still return success even if email fails - OTP is saved in DB
       return res.json({ message: "OTP sent successfully", warning: "Email delivery may be delayed" });
     }
 
     res.json({ message: "OTP sent successfully" });
   } catch (error) {
+    console.error('Send OTP error:', error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -79,6 +82,7 @@ router.post("/register", async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -98,12 +102,7 @@ router.post("/send-reset-otp", async (req, res) => {
 
     const otp = emailService.generateOTP();
     await OTP.create({ email, otp, type: 'password-reset' });
-    
-    try {
-      await emailService.sendPasswordResetOTP(email, otp);
-    } catch (emailError) {
-      return res.json({ message: "OTP sent successfully", warning: "Email delivery may be delayed" });
-    }
+    await emailService.sendPasswordResetOTP(email, otp);
 
     res.json({ message: "Password reset OTP sent successfully" });
   } catch (error) {
@@ -115,10 +114,6 @@ router.post("/send-reset-otp", async (req, res) => {
 router.post("/reset-password", async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
-
-    if (!email || !otp || !newPassword) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
 
     // Verify OTP
     const otpRecord = await OTP.findOne({ email, otp, type: 'password-reset' });
