@@ -624,11 +624,11 @@ router.get('/menu-limits', async (req, res) => {
 // Create/Update menu limit
 router.post('/menu-limits', adminAuth, async (req, res) => {
   try {
-    const { menuType, menuVariant, category, limit } = req.body;
+    const { menuType, menuVariant, category, limit, price, description } = req.body;
     
     const menuLimit = await MenuLimit.findOneAndUpdate(
       { menuType, menuVariant, category },
-      { limit, isActive: true },
+      { limit, price, description, isActive: true },
       { new: true, upsert: true }
     );
     
