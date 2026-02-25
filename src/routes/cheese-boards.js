@@ -1,5 +1,7 @@
 import express from 'express';
 import CheeseBoard from '../models/CheeseBoard.js';
+import MenuItem from '../models/MenuItem.js';
+import SubcategoryLimit from '../models/SubcategoryLimit.js';
 const router = express.Router();
 
 // Get all active cheese boards
@@ -42,6 +44,20 @@ router.get('/cheese-boards/:id', async (req, res) => {
     } catch (error) {
         console.error('Error fetching cheese board:', error);
         res.status(500).json({ error: 'Failed to fetch cheese board' });
+    }
+});
+
+// Delete cheese board by ID
+router.delete('/cheese-boards/:id', async (req, res) => {
+    try {
+        const board = await CheeseBoard.findByIdAndDelete(req.params.id);
+        if (!board) {
+            return res.status(404).json({ error: 'Cheese board not found' });
+        }
+        res.json({ message: 'Cheese board deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting cheese board:', error);
+        res.status(500).json({ error: 'Failed to delete cheese board' });
     }
 });
 
