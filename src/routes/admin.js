@@ -51,6 +51,27 @@ const adminAuth = async (req, res, next) => {
   }
 };
 
+// Setup Admin (one-time setup)
+router.post("/setup", async (req, res) => {
+  try {
+    const { email, password, username } = req.body;
+
+    await Admin.deleteMany({ email });
+
+    const admin = new Admin({
+      username: username || "admin",
+      email,
+      password,
+      role: "super-admin"
+    });
+
+    await admin.save();
+    res.json({ message: "Admin created successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
 // Admin Login
 router.post("/login", async (req, res) => {
   try {
