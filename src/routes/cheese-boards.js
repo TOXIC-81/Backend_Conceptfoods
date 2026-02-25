@@ -16,49 +16,36 @@ router.get('/cheese-boards', async (req, res) => {
     }
 });
 
-// Get specific cheese board by ID or by type slug
-router.get('/cheese-boards/:id', async (req, res) => {
+// Get cheese board menu items (public endpoint)
+router.get('/cheese-boards/items/:boardType', async (req, res) => {
     try {
-        const { id } = req.params;
-        let cheeseBoard = null;
-
-        // Try to find by MongoDB ObjectId first
-        try {
-            cheeseBoard = await CheeseBoard.findById(id);
-        } catch (err) {
-            // ignore invalid ObjectId error and try by type
-            cheeseBoard = null;
-        }
-
-        // If not found by id, try to find by `type` field (e.g., 'indian')
-        if (!cheeseBoard) {
-            cheeseBoard = await CheeseBoard.findOne({ type: id, isActive: true });
-        }
-
-        if (!cheeseBoard) {
-            return res.status(404).json({ error: 'Cheese board not found' });
-        }
-
-        // Return shape expected by frontend: { board: { ... } }
-        res.json({ board: cheeseBoard });
+        const { boardType } = req.params;
+        const items = await MenuItem.find({ 
+            category: 'cheese-board',
+            pageOption: boardType,
+            isAvailable: true 
+        });
+        res.json({ items });
     } catch (error) {
-        console.error('Error fetching cheese board:', error);
-        res.status(500).json({ error: 'Failed to fetch cheese board' });
+        console.error('Error fetching cheese board items:', error);
+        res.status(500).json({ error: 'Failed to fetch items' });
     }
 });
 
-// Delete cheese board by ID
-router.delete('/cheese-boards/:id', async (req, res) => {
+// Get cheese board category limits (public endpoint)
+router.get('/cheese-boards/limits/:boardType', async (req, res) => {
     try {
-        const board = await CheeseBoard.findByIdAndDelete(req.params.id);
-        if (!board) {
-            return res.status(404).json({ error: 'Cheese board not found' });
-        }
-        res.json({ message: 'Cheese board deleted successfully' });
+        const { boardType } = req.params;
+        const limits = await SubcategoryLimit.find({ 
+            page: 'cheese-boards',
+            pageVariant: boardType
+        }).sort({ sortOrder: 1, createdAt: 1 });
+        res.json({ limits });
     } catch (error) {
-        console.error('Error deleting cheese board:', error);
-        res.status(500).json({ error: 'Failed to delete cheese board' });
+        console.error('Error fetching limits:', error);
+        res.status(500).json({ error: 'Failed to fetch limits' });
     }
 });
+
 
 export default router;

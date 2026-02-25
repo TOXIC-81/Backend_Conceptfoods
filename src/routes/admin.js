@@ -122,7 +122,7 @@ router.get("/menu-items-admin", adminAuth, async (req, res) => {
     
     // Use lean queries and projection for better performance
     const items = await MenuItem.find(filter)
-      .select('name category subcategory price description isVegetarian isAvailable sortOrder createdAt')
+      .select('name category subcategory price description isVegetarian isAvailable sortOrder pageOption createdAt')
       .lean()
       .sort({ sortOrder: 1, name: 1 })
       .limit(200);
