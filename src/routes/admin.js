@@ -536,7 +536,7 @@ router.put('/orders/:id', adminAuth, async (req, res) => {
 router.get('/categories/:type', async (req, res) => {
   try {
     const categories = await Category.find({ type: req.params.type, isActive: true })
-      .sort({ sortOrder: 1, name: 1 })
+      .sort({ sortOrder: 1, createdAt: 1 })
       .lean();
     res.json({ categories });
   } catch (error) {
@@ -657,7 +657,7 @@ router.get('/subcategory-limits', async (req, res) => {
     if (pageVariant) filter.pageVariant = pageVariant;
     
     const limits = await SubcategoryLimit.find(filter)
-      .sort({ page: 1, pageVariant: 1, subcategory: 1 })
+      .sort({ sortOrder: 1, createdAt: 1 })
       .lean();
     res.json({ limits });
   } catch (error) {
