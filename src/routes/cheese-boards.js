@@ -2,7 +2,36 @@ import express from 'express';
 import CheeseBoard from '../models/CheeseBoard.js';
 import MenuItem from '../models/MenuItem.js';
 import SubcategoryLimit from '../models/SubcategoryLimit.js';
+import jwt from 'jsonwebtoken';
+import Admin from '../models/Admin.js';
+import User from '../models/User.js';
+
 const router = express.Router();
+
+// Admin middleware
+const adminAuth = async (req, res, next) => {
+    try {
+        const token = req.header("Authorization")?.replace("Bearer ", "");
+        if (!token) return res.status(401).json({ message: "No token provided" });
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        if (decoded.adminId) {
+            const admin = await Admin.findById(decoded.adminId);
+            if (!admin) return res.status(401).json({ message: "Invalid token" });
+            req.admin = admin;
+        } else if (decoded.userId) {
+            const user = await User.findById(decoded.userId);
+            if (!user || !user.isAdmin) return res.status(403).json({ message: "Admin access required" });
+            req.admin = user;
+        } else {
+            return res.status(401).json({ message: "Invalid token" });
+        }
+        next();
+    } catch (error) {
+        res.status(401).json({ message: "Invalid token" });
+    }
+};
 
 // Get all active cheese boards
 router.get('/cheese-boards', async (req, res) => {
@@ -44,6 +73,20 @@ router.get('/cheese-boards/limits/:boardType', async (req, res) => {
     } catch (error) {
         console.error('Error fetching limits:', error);
         res.status(500).json({ error: 'Failed to fetch limits' });
+    }
+});
+
+// Delete cheese board (admin only)
+router.delete('/cheese-boards/:id', adminAuth, async (req, res) => {
+    try {
+        const board = await CheeseBoard.findByIdAndDelete(req.params.id);
+        if (!board) {
+            return res.status(404).json({ error: 'Cheese board not found' });
+        }
+        res.json({ message: 'Cheese board deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting cheese board:', error);
+        res.status(500).json({ error: 'Failed to delete cheese board' });
     }
 });
 
