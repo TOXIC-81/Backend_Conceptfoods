@@ -25,6 +25,10 @@ const menuItemSchema = new mongoose.Schema({
     trim: true,
     required: true
   },
+  pageOption: {
+    type: String,
+    trim: true
+  },
   image: {
     type: String,
     default: ''

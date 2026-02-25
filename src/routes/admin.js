@@ -10,6 +10,7 @@ import Order from "../models/Order.js";
 import Image from "../models/Image.js";
 import MenuLimit from "../models/MenuLimit.js";
 import SubcategoryLimit from "../models/SubcategoryLimit.js";
+import PageOption from "../models/PageOption.js";
 
 const router = express.Router();
 
@@ -712,5 +713,60 @@ router.delete('/subcategory-limits/:id', adminAuth, async (req, res) => {
     res.json({ message: 'Subcategory limit deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete subcategory limit' });
+  }
+});
+
+// Page Options CRUD
+router.get('/page-options', async (req, res) => {
+  try {
+    const { page } = req.query;
+    const filter = page ? { page, isActive: true } : { isActive: true };
+    const options = await PageOption.find(filter).sort({ sortOrder: 1, name: 1 }).lean();
+    res.json({ options });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch page options' });
+  }
+});
+
+router.post('/page-options', adminAuth, async (req, res) => {
+  try {
+    const option = new PageOption(req.body);
+    await option.save();
+    res.status(201).json({ message: 'Page option created successfully', option });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create page option' });
+  }
+});
+
+router.put('/page-options/:id', adminAuth, async (req, res) => {
+  try {
+    const option = await PageOption.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!option) {
+      return res.status(404).json({ error: 'Page option not found' });
+    }
+    res.json({ message: 'Page option updated successfully', option });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update page option' });
+  }
+});
+
+router.delete('/page-options/:id', adminAuth, async (req, res) => {
+  try {
+    await PageOption.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Page option deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete page option' });
+  }
+});
+
+// Get menu items by page option
+router.get('/menu-items-by-option', async (req, res) => {
+  try {
+    const { page, pageOption } = req.query;
+    const filter = { category: page, pageOption, isAvailable: true };
+    const items = await MenuItem.find(filter).select('name subcategory price description isVegetarian sortOrder').lean().sort({ sortOrder: 1 });
+    res.json({ items });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch items' });
   }
 });
