@@ -614,7 +614,7 @@ router.get('/menu-limits', async (req, res) => {
     if (menuType) filter.menuType = menuType;
     if (menuVariant) filter.menuVariant = menuVariant;
     
-    const limits = await MenuLimit.find(filter).sort({ menuType: 1, menuVariant: 1, category: 1 });
+    const limits = await MenuLimit.find(filter).sort({ createdAt: 1 });
     res.json({ limits });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch menu limits' });
@@ -624,11 +624,11 @@ router.get('/menu-limits', async (req, res) => {
 // Create/Update menu limit
 router.post('/menu-limits', adminAuth, async (req, res) => {
   try {
-    const { menuType, menuVariant, category, limit } = req.body;
+    const { menuType, menuVariant, category, limit, price, description, isPureVeg } = req.body;
     
     const menuLimit = await MenuLimit.findOneAndUpdate(
       { menuType, menuVariant, category },
-      { limit, isActive: true },
+      { limit, price, description, isPureVeg: isPureVeg || false, isActive: true },
       { new: true, upsert: true }
     );
     

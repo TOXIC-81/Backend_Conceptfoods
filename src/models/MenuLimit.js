@@ -17,8 +17,20 @@ const menuLimitSchema = new mongoose.Schema({
     limit: {
         type: Number,
         required: true,
-        min: 1,
+        min: 0,
         max: 20
+    },
+    price: {
+        type: Number,
+        default: 0
+    },
+    description: {
+        type: String,
+        default: ''
+    },
+    isPureVeg: {
+        type: Boolean,
+        default: false
     },
     isActive: {
         type: Boolean,
