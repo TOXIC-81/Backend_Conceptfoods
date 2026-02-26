@@ -26,6 +26,10 @@ const orderSchema = new mongoose.Schema({
     required: true,
     enum: ['cheese-board', 'curate-box', 'catering', 'grazing', 'grazing-table']
   },
+  quantity: {
+    value: Number,
+    label: String
+  },
   items: [{
     name: String,
     price: Number,
