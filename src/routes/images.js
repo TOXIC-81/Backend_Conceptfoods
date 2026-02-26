@@ -7,7 +7,7 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit (MongoDB has 16MB document limit)
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -22,6 +22,11 @@ router.post('/upload', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    // Check if file size with metadata will exceed MongoDB 16MB limit
+    if (req.file.size > 15 * 1024 * 1024) {
+      return res.status(400).json({ error: 'Image too large. Maximum size is 15MB to fit in database.' });
     }
 
     const image = new Image({
@@ -43,6 +48,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
       category: image.category
     });
   } catch (error) {
+    console.error('Image upload error:', error);
     res.status(500).json({ error: error.message });
   }
 });
