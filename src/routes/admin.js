@@ -557,7 +557,7 @@ router.put('/orders/:id', adminAuth, async (req, res) => {
 router.get('/categories/:type', async (req, res) => {
   try {
     const categories = await Category.find({ type: req.params.type, isActive: true })
-      .sort({ sortOrder: 1, createdAt: 1 })
+      .sort({ order: 1, sortOrder: 1, createdAt: 1 })
       .lean();
     res.json({ categories });
   } catch (error) {
@@ -586,6 +586,18 @@ router.put('/categories/:id', adminAuth, async (req, res) => {
     res.json({ message: 'Category updated successfully', category });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update category' });
+  }
+});
+
+// Get all categories for admin (includes inactive)
+router.get('/categories-admin/:type', adminAuth, async (req, res) => {
+  try {
+    const categories = await Category.find({ type: req.params.type })
+      .sort({ order: 1, sortOrder: 1, createdAt: 1 })
+      .lean();
+    res.json({ categories });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch categories' });
   }
 });
 
@@ -635,7 +647,7 @@ router.get('/menu-limits', async (req, res) => {
     if (menuType) filter.menuType = menuType;
     if (menuVariant) filter.menuVariant = menuVariant;
     
-    const limits = await MenuLimit.find(filter).sort({ createdAt: 1 });
+    const limits = await MenuLimit.find(filter).sort({ sortOrder: 1, createdAt: 1 });
     res.json({ limits });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch menu limits' });
@@ -645,11 +657,11 @@ router.get('/menu-limits', async (req, res) => {
 // Create/Update menu limit
 router.post('/menu-limits', adminAuth, async (req, res) => {
   try {
-    const { menuType, menuVariant, category, limit, price, description, isPureVeg } = req.body;
+    const { menuType, menuVariant, category, limit, price, description, isPureVeg, sortOrder } = req.body;
     
     const menuLimit = await MenuLimit.findOneAndUpdate(
       { menuType, menuVariant, category },
-      { limit, price, description, isPureVeg: isPureVeg || false, isActive: true },
+      { limit, price, description, isPureVeg: isPureVeg || false, sortOrder: sortOrder !== undefined ? sortOrder : 0, isActive: true },
       { new: true, upsert: true }
     );
     
@@ -666,6 +678,19 @@ router.delete('/menu-limits/:id', adminAuth, async (req, res) => {
     res.json({ message: 'Menu limit deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete menu limit' });
+  }
+});
+
+// Update single menu limit
+router.put('/menu-limits/:id', adminAuth, async (req, res) => {
+  try {
+    const menuLimit = await MenuLimit.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!menuLimit) {
+      return res.status(404).json({ error: 'Menu limit not found' });
+    }
+    res.json({ message: 'Menu limit updated successfully', menuLimit });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update menu limit' });
   }
 });
 
@@ -734,6 +759,19 @@ router.delete('/subcategory-limits/:id', adminAuth, async (req, res) => {
     res.json({ message: 'Subcategory limit deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete subcategory limit' });
+  }
+});
+
+// Update single subcategory limit
+router.put('/subcategory-limits/:id', adminAuth, async (req, res) => {
+  try {
+    const subcategoryLimit = await SubcategoryLimit.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!subcategoryLimit) {
+      return res.status(404).json({ error: 'Subcategory limit not found' });
+    }
+    res.json({ message: 'Subcategory limit updated successfully', subcategoryLimit });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update subcategory limit' });
   }
 });
 
