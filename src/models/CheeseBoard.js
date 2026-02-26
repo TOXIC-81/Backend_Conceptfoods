@@ -16,6 +16,10 @@ const cheeseBoardSchema = new mongoose.Schema({
     },
     description: String,
     image: String,
+    order: {
+        type: Number,
+        default: 0
+    },
     limits: {
         cheese: Number,
         bread: Number,

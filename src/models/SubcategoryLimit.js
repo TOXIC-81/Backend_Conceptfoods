@@ -24,6 +24,10 @@ const subcategoryLimitSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    boardOrder: {
+        type: Number,
+        default: 0
+    },
     isActive: {
         type: Boolean,
         default: true
