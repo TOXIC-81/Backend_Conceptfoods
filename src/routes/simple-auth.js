@@ -194,7 +194,7 @@ router.post("/orders", async (req, res) => {
     
     const order = new Order({
       orderNumber,
-      userId: userId, // Link to user if logged in
+      userId: userId,
       customerInfo: {
         name: orderData.orderDetails?.name,
         email: orderData.customerInfo?.email || orderData.orderDetails?.email,
@@ -206,10 +206,12 @@ router.post("/orders", async (req, res) => {
         pincode: orderData.orderDetails?.pincode
       },
       orderType: orderData.orderType,
+      quantity: orderData.quantity || null,
       items: orderData.items || [],
       cheeseBoard: orderData.cheeseBoard || null,
       grazingTable: orderData.grazingTable || null,
       catering: orderData.catering || null,
+      curateBox: orderData.curateBox || null,
       totalPrice: orderData.totalPrice,
       notes: orderData.orderDetails?.specialInstructions,
       status: 'pending'
