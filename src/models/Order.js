@@ -31,6 +31,7 @@ const orderSchema = new mongoose.Schema({
     price: Number,
     quantity: { type: Number, default: 1 }
   }],
+  numberOfBoxes: Number,
   cheeseBoard: {
     type: {
       type: String
@@ -46,7 +47,8 @@ const orderSchema = new mongoose.Schema({
     menuName: String,
     selections: mongoose.Schema.Types.Mixed,
     pricePerPerson: Number,
-    minimumPax: Number
+    minimumPax: Number,
+    estimatedPeople: Number
   },
   totalPrice: {
     type: Number,
