@@ -329,7 +329,7 @@ router.get("/profile", adminAuth, async (req, res) => {
 // Get cheese boards
 router.get('/cheese-boards', async (req, res) => {
   try {
-    const boards = await CheeseBoard.find().sort({ order: 1, createdAt: 1 }).lean().limit(20);
+    const boards = await CheeseBoard.find().lean().limit(20);
     res.json({ boards });
   } catch (error) {
     console.error('Error fetching cheese boards:', error);

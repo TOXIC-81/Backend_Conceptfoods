@@ -36,10 +36,6 @@ const menuLimitSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    menuOrder: {
-        type: Number,
-        default: 0
-    },
     isActive: {
         type: Boolean,
         default: true
