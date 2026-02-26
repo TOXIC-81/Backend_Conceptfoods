@@ -46,7 +46,11 @@ const orderSchema = new mongoose.Schema({
     menuName: String,
     selections: mongoose.Schema.Types.Mixed,
     pricePerPerson: Number,
-    minimumPax: Number
+    minimumPax: Number,
+    estimatedPeople: Number
+  },
+  curateBox: {
+    numberOfBoxes: Number
   },
   totalPrice: {
     type: Number,
