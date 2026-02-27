@@ -14,6 +14,10 @@ const cheeseBoardSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    order: {
+        type: Number,
+        default: 0
+    },
     description: String,
     image: String,
     limits: {
