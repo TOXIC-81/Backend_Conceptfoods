@@ -655,6 +655,7 @@ router.get('/menu-limits', async (req, res) => {
     console.log(`Found ${limits.length} limits`);
     if (limits.length > 0) {
       console.log('First limit menuOrder:', limits[0].menuOrder);
+      console.log('First limit minimumPax:', limits[0].minimumPax);
       console.log('Sample limit:', JSON.stringify(limits[0], null, 2));
     }
     console.log('=== END MENU LIMIT GET ===\n');
@@ -672,12 +673,11 @@ router.post('/menu-limits', adminAuth, async (req, res) => {
     console.log('=== MENU LIMIT POST REQUEST ===');
     console.log('Full request body:', JSON.stringify(req.body, null, 2));
     
-    const { menuType, menuVariant, category, limit, price, description, isPureVeg, sortOrder, menuOrder } = req.body;
+    const { menuType, menuVariant, category, limit, price, description, isPureVeg, sortOrder, menuOrder, minimumPax } = req.body;
     
     console.log('Extracted menuOrder:', menuOrder);
-    console.log('menuOrder type:', typeof menuOrder);
-    console.log('menuOrder !== undefined:', menuOrder !== undefined);
-    console.log('Final menuOrder value:', menuOrder !== undefined ? menuOrder : 0);
+    console.log('Extracted minimumPax:', minimumPax);
+    console.log('minimumPax type:', typeof minimumPax);
     
     const updateData = {
       limit,
@@ -686,6 +686,7 @@ router.post('/menu-limits', adminAuth, async (req, res) => {
       isPureVeg: isPureVeg || false,
       sortOrder: sortOrder !== undefined ? sortOrder : 0,
       menuOrder: menuOrder !== undefined ? menuOrder : 0,
+      minimumPax: minimumPax !== undefined ? minimumPax : 25,
       isActive: true
     };
     
@@ -699,6 +700,7 @@ router.post('/menu-limits', adminAuth, async (req, res) => {
     );
     
     console.log('Saved menuLimit:', JSON.stringify(menuLimit, null, 2));
+    console.log('Saved minimumPax:', menuLimit.minimumPax);
     console.log('=== END MENU LIMIT POST ===\n');
     
     res.json({ message: 'Menu limit updated successfully', menuLimit });
