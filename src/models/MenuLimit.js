@@ -40,6 +40,11 @@ const menuLimitSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    minimumPax: {
+        type: Number,
+        default: 25,
+        min: 1
+    },
     isActive: {
         type: Boolean,
         default: true
