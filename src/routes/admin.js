@@ -647,9 +647,21 @@ router.get('/menu-limits', async (req, res) => {
     if (menuType) filter.menuType = menuType;
     if (menuVariant) filter.menuVariant = menuVariant;
     
+    console.log('=== MENU LIMIT GET REQUEST ===');
+    console.log('Filter:', filter);
+    
     const limits = await MenuLimit.find(filter).sort({ sortOrder: 1, createdAt: 1 });
+    
+    console.log(`Found ${limits.length} limits`);
+    if (limits.length > 0) {
+      console.log('First limit menuOrder:', limits[0].menuOrder);
+      console.log('Sample limit:', JSON.stringify(limits[0], null, 2));
+    }
+    console.log('=== END MENU LIMIT GET ===\n');
+    
     res.json({ limits });
   } catch (error) {
+    console.error('Error in menu-limits GET:', error);
     res.status(500).json({ error: 'Failed to fetch menu limits' });
   }
 });
@@ -657,16 +669,41 @@ router.get('/menu-limits', async (req, res) => {
 // Create/Update menu limit
 router.post('/menu-limits', adminAuth, async (req, res) => {
   try {
-    const { menuType, menuVariant, category, limit, price, description, isPureVeg, sortOrder } = req.body;
+    console.log('=== MENU LIMIT POST REQUEST ===');
+    console.log('Full request body:', JSON.stringify(req.body, null, 2));
+    
+    const { menuType, menuVariant, category, limit, price, description, isPureVeg, sortOrder, menuOrder } = req.body;
+    
+    console.log('Extracted menuOrder:', menuOrder);
+    console.log('menuOrder type:', typeof menuOrder);
+    console.log('menuOrder !== undefined:', menuOrder !== undefined);
+    console.log('Final menuOrder value:', menuOrder !== undefined ? menuOrder : 0);
+    
+    const updateData = {
+      limit,
+      price,
+      description,
+      isPureVeg: isPureVeg || false,
+      sortOrder: sortOrder !== undefined ? sortOrder : 0,
+      menuOrder: menuOrder !== undefined ? menuOrder : 0,
+      isActive: true
+    };
+    
+    console.log('Update data:', JSON.stringify(updateData, null, 2));
+    console.log('Filter:', { menuType, menuVariant, category });
     
     const menuLimit = await MenuLimit.findOneAndUpdate(
       { menuType, menuVariant, category },
-      { limit, price, description, isPureVeg: isPureVeg || false, sortOrder: sortOrder !== undefined ? sortOrder : 0, isActive: true },
+      updateData,
       { new: true, upsert: true }
     );
     
+    console.log('Saved menuLimit:', JSON.stringify(menuLimit, null, 2));
+    console.log('=== END MENU LIMIT POST ===\n');
+    
     res.json({ message: 'Menu limit updated successfully', menuLimit });
   } catch (error) {
+    console.error('Error in menu-limits POST:', error);
     res.status(500).json({ error: 'Failed to update menu limit' });
   }
 });
