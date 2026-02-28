@@ -329,7 +329,7 @@ router.get("/profile", adminAuth, async (req, res) => {
 // Get cheese boards
 router.get('/cheese-boards', async (req, res) => {
   try {
-    const boards = await CheeseBoard.find().sort({ order: 1, createdAt: 1 }).lean().limit(20);
+    const boards = await CheeseBoard.find().sort({ order: 1 }).lean().limit(20);
     res.json({ boards });
   } catch (error) {
     console.error('Error fetching cheese boards:', error);
@@ -557,7 +557,7 @@ router.put('/orders/:id', adminAuth, async (req, res) => {
 router.get('/categories/:type', async (req, res) => {
   try {
     const categories = await Category.find({ type: req.params.type, isActive: true })
-      .sort({ order: 1, sortOrder: 1, createdAt: 1 })
+      .sort({ order: 1, sortOrder: 1 })
       .lean();
     res.json({ categories });
   } catch (error) {
@@ -593,7 +593,7 @@ router.put('/categories/:id', adminAuth, async (req, res) => {
 router.get('/categories-admin/:type', adminAuth, async (req, res) => {
   try {
     const categories = await Category.find({ type: req.params.type })
-      .sort({ order: 1, sortOrder: 1, createdAt: 1 })
+      .sort({ order: 1, sortOrder: 1 })
       .lean();
     res.json({ categories });
   } catch (error) {
@@ -619,7 +619,7 @@ router.get('/images/:category', async (req, res) => {
   try {
     const images = await Image.find({ category: req.params.category, isActive: true })
       .select('-data') // Exclude binary data for listing
-      .sort({ sortOrder: 1, uploadedAt: -1 })
+      .sort({ sortOrder: 1 })
       .lean();
     res.json({ images });
   } catch (error) {
@@ -650,7 +650,7 @@ router.get('/menu-limits', async (req, res) => {
     console.log('=== MENU LIMIT GET REQUEST ===');
     console.log('Filter:', filter);
     
-    const limits = await MenuLimit.find(filter).sort({ sortOrder: 1, createdAt: 1 });
+    const limits = await MenuLimit.find(filter).sort({ sortOrder: 1 });
     
     console.log(`Found ${limits.length} limits`);
     if (limits.length > 0) {
@@ -742,7 +742,7 @@ router.get('/subcategory-limits', async (req, res) => {
     if (pageVariant) filter.pageVariant = pageVariant;
     
     const limits = await SubcategoryLimit.find(filter)
-      .sort({ sortOrder: 1, createdAt: 1 })
+      .sort({ sortOrder: 1 })
       .lean();
     res.json({ limits });
   } catch (error) {

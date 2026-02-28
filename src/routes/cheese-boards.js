@@ -36,7 +36,7 @@ const adminAuth = async (req, res, next) => {
 // Get all active cheese boards
 router.get('/cheese-boards', async (req, res) => {
     try {
-        const cheeseBoards = await CheeseBoard.find({ isActive: true }).sort({ order: 1, createdAt: 1 });
+        const cheeseBoards = await CheeseBoard.find({ isActive: true }).sort({ order: 1 });
         // Return shape expected by frontend: { boards: [...] }
         res.json({ boards: cheeseBoards });
     } catch (error) {
@@ -68,7 +68,7 @@ router.get('/cheese-boards/limits/:boardType', async (req, res) => {
         const limits = await SubcategoryLimit.find({ 
             page: 'cheese-boards',
             pageVariant: boardType
-        }).sort({ sortOrder: 1, createdAt: 1 });
+        }).sort({ sortOrder: 1 });
         res.json({ limits });
     } catch (error) {
         console.error('Error fetching limits:', error);
