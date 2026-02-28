@@ -7,47 +7,12 @@ import emailService from "../services/emailService.js";
 
 const router = express.Router();
 
-// Send Registration OTP
-router.post("/send-registration-otp", async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    // Delete any existing OTPs for this email
-    await OTP.deleteMany({ email, type: 'registration' });
-
-    const otp = emailService.generateOTP();
-    await OTP.create({ email, otp, type: 'registration' });
-    
-    try {
-      await emailService.sendRegistrationOTP(email, otp);
-    } catch (emailError) {
-      console.error('Email send error:', emailError);
-      // Still return success even if email fails - OTP is saved in DB
-      return res.json({ message: "OTP sent successfully", warning: "Email delivery may be delayed" });
-    }
-
-    res.json({ message: "OTP sent successfully" });
-  } catch (error) {
-    console.error('Send OTP error:', error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-});
-
-// Verify Registration OTP and Register
+// Register
 router.post("/register", async (req, res) => {
   try {
-    const { firstName, lastName, email, phone, password, otp } = req.body;
+    const { firstName, lastName, email, phone, password } = req.body;
 
-    if (!firstName || !lastName || !email || !phone || !password || !otp) {
+    if (!firstName || !lastName || !email || !phone || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -56,17 +21,8 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Verify OTP
-    const otpRecord = await OTP.findOne({ email, otp, type: 'registration' });
-    if (!otpRecord) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
-    }
-
-    const user = new User({ firstName, lastName, email, phone, password });
+    const user = new User({ firstName, lastName, email, phone, password, isEmailVerified: false });
     await user.save();
-
-    // Delete the OTP after successful registration
-    await OTP.deleteOne({ _id: otpRecord._id });
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
 
@@ -78,11 +34,88 @@ router.post("/register", async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        phone: user.phone
+        phone: user.phone,
+        isEmailVerified: user.isEmailVerified
       }
     });
   } catch (error) {
     console.error('Registration error:', error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// Send Email Verification OTP
+router.post("/send-email-verification-otp", async (req, res) => {
+  try {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ message: "Email already verified" });
+    }
+
+    await OTP.deleteMany({ email: user.email, type: 'email-verification' });
+
+    const otp = emailService.generateOTP();
+    await OTP.create({ email: user.email, otp, type: 'email-verification' });
+    
+    try {
+      await emailService.sendRegistrationOTP(user.email, otp);
+    } catch (emailError) {
+      console.error('Email send error:', emailError);
+      return res.json({ message: "OTP sent successfully", warning: "Email delivery may be delayed" });
+    }
+
+    res.json({ message: "Verification OTP sent successfully" });
+  } catch (error) {
+    console.error('Send verification OTP error:', error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// Verify Email
+router.post("/verify-email", async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ message: "Email already verified" });
+    }
+
+    const otpRecord = await OTP.findOne({ email: user.email, otp, type: 'email-verification' });
+    if (!otpRecord) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    user.isEmailVerified = true;
+    await user.save();
+
+    await OTP.deleteOne({ _id: otpRecord._id });
+
+    res.json({ message: "Email verified successfully" });
+  } catch (error) {
+    console.error('Email verification error:', error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -163,7 +196,8 @@ router.post("/login", async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        phone: user.phone
+        phone: user.phone,
+        isEmailVerified: user.isEmailVerified
       }
     });
   } catch (error) {
