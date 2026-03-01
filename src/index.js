@@ -24,8 +24,11 @@ app.use(performanceMiddleware.responseTime);
 app.use(performanceMiddleware.memoryOptimization);
 app.use(performanceMiddleware.rateLimit(200, 60000)); // 200 requests per minute
 
+// CORS configuration - must be before routes
 app.use(cors({
   origin: [
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
     "http://127.0.0.1:5501",
     "http://localhost:5501",
     "http://127.0.0.1:5502",
@@ -43,8 +46,11 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400
+  maxAge: 86400,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
+
 app.use(express.json());
 
 // Serve uploaded images with caching

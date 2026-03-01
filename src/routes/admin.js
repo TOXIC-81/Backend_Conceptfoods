@@ -11,6 +11,7 @@ import Image from "../models/Image.js";
 import MenuLimit from "../models/MenuLimit.js";
 import SubcategoryLimit from "../models/SubcategoryLimit.js";
 import PageOption from "../models/PageOption.js";
+import emailService from "../services/emailService.js";
 
 const router = express.Router();
 
@@ -512,6 +513,16 @@ router.post('/orders', async (req, res) => {
     const orderNumber = 'ORD' + Date.now();
     const order = new Order({ ...req.body, orderNumber });
     await order.save();
+    
+    if (order.customerInfo?.email) {
+      try {
+        await emailService.sendOrderConfirmation(order);
+        console.log(`✓ Order confirmation email sent to ${order.customerInfo.email}`);
+      } catch (emailError) {
+        console.error('✗ Failed to send order confirmation email:', emailError.message);
+      }
+    }
+    
     res.status(201).json({ message: 'Order created successfully', order });
   } catch (error) {
     console.error('Error creating order:', error);

@@ -7,12 +7,49 @@ import emailService from "../services/emailService.js";
 
 const router = express.Router();
 
+// Send Registration OTP
+router.post("/send-registration-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    await OTP.deleteMany({ email, type: 'registration' });
+
+    const otp = emailService.generateOTP();
+    await OTP.create({ email, otp, type: 'registration' });
+    
+    console.log(`\n🔐 OTP Generated for ${email}: ${otp}`);
+    console.log(`⏰ Valid for 5 minutes\n`);
+    
+    try {
+      await emailService.sendRegistrationOTP(email, otp);
+      console.log(`✓ Email sent successfully to ${email}`);
+      res.json({ message: "OTP sent successfully" });
+    } catch (emailError) {
+      console.error('❌ Email send error:', emailError.message);
+      console.log(`⚠️  OTP still valid: ${otp}`);
+      res.json({ message: "OTP generated successfully", warning: "Email delivery may be delayed" });
+    }
+  } catch (error) {
+    console.error('Send registration OTP error:', error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
 // Register
 router.post("/register", async (req, res) => {
   try {
-    const { firstName, lastName, email, phone, password } = req.body;
+    const { firstName, lastName, email, phone, password, otp } = req.body;
 
-    if (!firstName || !lastName || !email || !phone || !password) {
+    if (!firstName || !lastName || !email || !phone || !password || !otp) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -21,8 +58,15 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const user = new User({ firstName, lastName, email, phone, password, isEmailVerified: false });
+    const otpRecord = await OTP.findOne({ email, otp, type: 'registration' });
+    if (!otpRecord) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    const user = new User({ firstName, lastName, email, phone, password, isEmailVerified: true });
     await user.save();
+
+    await OTP.deleteOne({ _id: otpRecord._id });
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
 

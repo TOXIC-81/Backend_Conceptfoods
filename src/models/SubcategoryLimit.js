@@ -17,8 +17,8 @@ const subcategoryLimitSchema = new mongoose.Schema({
     limit: {
         type: Number,
         required: true,
-        min: 1,
-        max: 20
+        min: 0,
+        max: 999
     },
     sortOrder: {
         type: Number,

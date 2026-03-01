@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Admin from "../models/Admin.js";
 import Order from "../models/Order.js";
+import emailService from "../services/emailService.js";
 
 const router = express.Router();
 
@@ -220,6 +221,15 @@ router.post("/orders", async (req, res) => {
     console.log('Saving order:', JSON.stringify(order, null, 2));
     await order.save();
     console.log('Order saved successfully with ID:', order._id);
+    
+    if (order.customerInfo?.email) {
+      try {
+        await emailService.sendOrderConfirmation(order);
+        console.log(`✓ Order confirmation email sent to ${order.customerInfo.email}`);
+      } catch (emailError) {
+        console.error('✗ Failed to send order confirmation email:', emailError.message);
+      }
+    }
     
     res.status(201).json({
       message: "Order placed successfully",

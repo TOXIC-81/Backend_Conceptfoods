@@ -18,7 +18,7 @@ const menuLimitSchema = new mongoose.Schema({
         type: Number,
         required: true,
         min: 0,
-        max: 20
+        max: 999
     },
     price: {
         type: Number,
